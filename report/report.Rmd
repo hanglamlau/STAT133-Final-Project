@@ -1,0 +1,327 @@
+---
+output: pdf_document
+---
+---
+title: "Report For Stat133 Final Project"
+author: "Tian Xia & Hang Lam Lau"
+date: "August 14, 2015"
+output: pdf_document
+---
+
+##Introduction
+
+This final project extracts information of hurricanes appeared historically and analyzes it by data frames and plots.The data sets that it specifically clean and anylyzing is ```Basin.NA.ibtracs_hurdat.v03r06.hdat``` regrading the North Atlantic Basin. In the section of data visualization, hurricanes once appeared between 1980s and 2010s have been plotted.
+
+---
+
+##Data Cleaning
+
+```{r,eval=FALSE}
+#The R code for generating the storms.csv files.
+rawdata <- read.csv('rawdata',header = FALSE, stringsAsFactors=FALSE)
+table(apply(rawdata,1,nchar))#so there should be 1777 entries of header
+header <- rawdata[grepl('M',rawdata[,1]),]
+
+header_id <- 1:1777#generate column 'id','date','days' and 'names'
+header_date <- as.Date(substr(header,7,17),'%m/%d/%Y')
+header_days <- as.numeric(substr(header,20,22))
+header_names <- gsub(' ','',substr(header,35,47))
+
+storms <- data.frame(id=header_id,date=header_date,days=header_days,
+                     name=header_names,row.names = NULL)
+storms$date <- format(storms$date,'%m/%d/%Y')#turn it into data 
+#frame and also format the 'date' column
+
+write.csv(storms,'../data/storms.csv')
+```
+
+`````{r,eval=FALSE}
+#The R code for generating the tracks.csv files.
+j <- row.names(rawdata)#j is the index of header
+j <- ifelse(nchar(rawdata[j,1])==85,j,0)
+j  <- j[j!=0]
+j <- as.numeric(j)
+
+k <- row.names(rawdata)#k is the index of trailer
+k <- ifelse(nchar(rawdata[k,1])==36,k,0)
+k  <- k[k!=0]
+k <- as.numeric(k)
+
+rep_id <- k-j-1#generate id of storm
+id <- rep(1:1777,rep_id)
+
+tracks <- rawdata[grepl('[\\*]',rawdata[,1]),]
+raw_tracks <- rawdata[grepl('[\\*]',rawdata[,1]),]
+tracks <- paste(id,tracks)#track information with id
+
+table_track <- data.frame('id'=1:51556,'date'=1:51556,'period'=1:51556,'stage'=1:51556,
+                          'lat'=1:51556,'long'=1:51556,'wind'=1:51556,'press'=1:51556)
+table_track$id <- rep(id,each=4)
+table_track$date <- rep(substr(raw_tracks,7,11),each=4)#generate the table of 'tracks'
+#with 'id' and 'date' column
+
+period <- c('00h','06h','12h','18h')
+table_track$period <- rep(period)#generate the 'period' column
+
+vec_stage <- c(12,29,46,63)
+stage <- character(0)
+for (i in 1:12889){
+  stage <- c(stage,substr(raw_tracks[i],vec_stage[1],vec_stage[1]))
+  stage <- c(stage,substr(raw_tracks[i],vec_stage[2],vec_stage[2]))
+  stage <- c(stage,substr(raw_tracks[i],vec_stage[3],vec_stage[3]))
+  stage <- c(stage,substr(raw_tracks[i],vec_stage[4],vec_stage[4]))
+}
+table_track$stage <- stage
+table_track$stage[table_track$stage=="*"] <- 'cyclone'
+table_track$stage[table_track$stage=="S"] <- 'subtropical'
+table_track$stage[table_track$stage=="E"] <- 'extratropical'
+table_track$stage[table_track$stage=="L"] <- 'remanent'
+table_track$stage[table_track$stage=="W"] <- 'wave'#generate the 'stage' column
+
+lat <- character(0)
+for (i in 1:12889){
+  lat <- c(lat,substr(raw_tracks[i],13,15))
+  lat <- c(lat,substr(raw_tracks[i],30,32))
+  lat <- c(lat,substr(raw_tracks[i],47,49))
+  lat <- c(lat,substr(raw_tracks[i],64,66))
+}
+table_track$lat <- as.numeric(lat)/10#generate the 'lat' column
+
+
+long <- character(0)
+for (i in 1:12889){
+  long <- c(long,substr(raw_tracks[i],16,19))
+  long <- c(long,substr(raw_tracks[i],33,36))
+  long <- c(long,substr(raw_tracks[i],50,53))
+  long <- c(long,substr(raw_tracks[i],67,70))
+}
+long <- as.numeric(long)/10
+long <- ifelse(long>=180,long-360,long)
+table_track$long <- long#generate the 'long' column
+
+wind <- character(0)
+for (i in 1:12889){
+  wind<- c(wind,substr(raw_tracks[i],20,23))
+  wind<- c(wind,substr(raw_tracks[i],37,40))
+  wind<- c(wind,substr(raw_tracks[i],54,57))
+  wind<- c(wind,substr(raw_tracks[i],71,74))
+}
+wind <- as.numeric(wind)
+table_track$wind <- wind#generate the 'wind' column
+
+press <- character(0)
+for (i in 1:12889){
+  press<- c(press,substr(raw_tracks[i],24,28))
+  press<- c(press,substr(raw_tracks[i],41,45))
+  press<- c(press,substr(raw_tracks[i],58,62))
+  press<- c(press,substr(raw_tracks[i],75,79))
+}
+table_track$press <- as.numeric(press)#generate the 'press' column
+
+year <- format(as.Date(storms$date,'%m/%d/%Y'),'%Y')
+year <- rep(year,rep_id)
+year <- rep(year,each=4)
+table_track$date <- as.Date(paste(table_track$date,'/',year,sep=''),
+                            '%m/%d/%Y')#format the 'date' column
+
+table_track$date[24765:24788] <- table_track$date[24765:24788]+365
+table_track$date[47365:47392] <- table_track$date[47365:47392]+365
+table_track$date <- format(table_track$date,'%m/%d/%Y')  
+
+table_track <- table_track[table_track$lat!=0 | table_track$long!=0 |
+                             table_track$wind!=0 | table_track$press!=0,]
+write.csv(table_track[,1:8],"tracks.csv")#delete invalid entries and export
+#as csv file
+
+`````
+
+
+---
+
+##Data Analyzing
+
+```{r,eval=TRUE}
+#Import the data sets and modify them for analysis
+setwd('../data')
+storms <- read.csv("storms.csv",stringsAsFactors=F)
+tracks <- read.csv("tracks.csv",stringsAsFactors=F)
+storms <- storms[,-1]
+tracks <- tracks[,-1]
+
+storms$date <- as.Date(storms$date,'%m/%d/%Y')
+tracks$date <- as.Date(tracks$date,'%m/%d/%Y')
+storms <- storms[storms$date>=as.Date('01/01/1980','%m/%d/%Y') & storms$date<=as.Date('12/31/2010','%m/%d/%Y'),]
+tracks <- tracks[tracks$date>=as.Date('01/01/1980','%m/%d/%Y') & tracks$date<=as.Date('12/31/2010','%m/%d/%Y'),]
+
+##Analysis Per Year
+
+per_year <- format(storms$date,'%Y')
+num_peryear <- aggregate(storms$id,list(per_year),length)
+names(num_peryear) <- c('Year','Number of Storms')
+
+#Frequency table of number of storms per year
+num_peryear
+
+#barplot of numers of storms per year
+barplot(num_peryear[[2]],as.numeric(num_peryear[[1]]),
+        names.arg=num_peryear[[1]],cex.names = 0.8,
+        main="Number of Storms Per Year")
+
+tracks_35 <- tracks[tracks$wind>=35,]
+num_peryear35 <- aggregate(tracks_35$id,
+                                  list(format(tracks_35$date,'%Y')),unique)
+num_peryear35[,1] <- 1980:2010
+num_peryear35[,2] <- as.numeric(sapply(num_peryear35[,2],length))
+names(num_peryear35) <- c('Year',"Storms over 35")
+
+#frequency table of numbes of storms per year with knots >=35
+num_peryear35
+
+#barplot of numers of storms per year with >=35
+barplot(num_peryear35[[2]],as.numeric(num_peryear[[1]]),
+        names.arg=num_peryear35[[1]],cex.names = 0.8,
+        main="Number of Storms Per Year with over 35 knots")
+
+
+tracks_64 <- tracks[tracks$wind>=64,]
+num_peryear64 <- aggregate(tracks_64$id,
+                           list(format(tracks_64$date,'%Y')),unique)
+num_peryear64[,1] <- 1980:2010
+num_peryear64[,2] <- as.numeric(sapply(num_peryear64[,2],length))
+names(num_peryear64) <- c('Year',"Storms over 64")
+
+#frequency table of numbers of storms per year with knots>=66
+num_peryear64
+
+#barplot of numers of storms per year with >=64
+barplot(num_peryear64[[2]],as.numeric(num_peryear[[1]]),
+        names.arg=num_peryear64[[1]],cex.names = 0.8,
+        main="Number of Storms Per Year with over 64 knots")
+
+
+tracks_96 <- tracks[tracks$wind>=96,]
+num_peryear96 <- aggregate(tracks_96$id,
+                           list(format(tracks_96$date,'%Y')),unique)
+num_peryear96[,2] <- as.numeric(sapply(num_peryear96[,2],length))
+names(num_peryear96) <- c('Year',"Storms over 96")
+
+#frequency table of numers of storms per year with >=96
+num_peryear96
+
+#barplot of numers of storms per year with >=96
+barplot(num_peryear96[[2]],as.numeric(num_peryear[[1]]),
+        names.arg=num_peryear96[[1]],cex.names = 0.8,
+        main="Number of Storms Per Year with over 96 knots")
+
+
+##Analysis Per Month
+
+per_month <- format(storms$date,'%B')
+num_permonth <- aggregate(storms$id,list(per_month),length)
+names(num_permonth) <- c('Month','Number of Storms')
+
+#frequency tableof numers of storms per month
+num_permonth
+
+
+#barplot of numers of storms per month
+barplot(num_permonth[[2]],c(4,8,12,7,6,5,11,10,9),
+        names.arg=num_permonth[[1]],cex.names = 0.8,
+        main="Number of Storms Per month")
+
+tracks_35 <- tracks[tracks$wind>=35,]
+num_permonth35 <- aggregate(tracks_35$id,
+                           list(format(tracks_35$date,'%B')),unique)
+num_permonth35[,2] <- as.numeric(sapply(num_permonth35[,2],length))
+names(num_permonth35) <- c('Month',"Storms over 35")
+
+# frequency table of numersstorms per month with >=35
+num_permonth35
+
+#barplot of numersof storms per month with >=35
+barplot(num_permonth35[[2]],1:10,
+        names.arg=num_permonth35[[1]],cex.names = 0.8,
+        main="Number of Storms Per month with over 35 knots")
+
+
+tracks_64 <- tracks[tracks$wind>=64,]
+num_permonth64 <- aggregate(tracks_64$id,
+                           list(format(tracks_64$date,'%B')),unique)
+num_permonth64[,2] <- as.numeric(sapply(num_permonth64[,2],length))
+names(num_permonth64) <- c('Month',"Storms over 64")
+
+#frequency table of numers of storms per month with >=64
+num_permonth64
+
+#barplot of numers of storms per month with >=64
+barplot(num_permonth64[[2]],1:8,
+        names.arg=num_permonth64[[1]],cex.names = 0.8,
+        main="Number of Storms Per month with over 64 knots")
+
+tracks_96 <- tracks[tracks$wind>=96,]
+num_permonth96 <- aggregate(tracks_96$id,
+                           list(format(tracks_96$date,'%B')),unique)
+num_permonth96[,2] <- as.numeric(sapply(num_permonth96[,2],length))
+names(num_permonth96) <- c('Month',"Storms over 96")
+#frequency table of numers of storms per month with >=96
+num_permonth96
+
+##barplot of numers of storms per month with >=96
+barplot(num_permonth96[[2]],1:5,
+        names.arg=num_permonth96[[1]],cex.names = 0.8,
+        main="Number of Storms Per month with over 96 knots")
+
+
+
+
+
+##avg number of storms over 35,64,96 knots
+#Average number of storms with knots >=35
+summary(num_peryear35[[2]])
+sd(num_peryear35[[2]])
+
+
+#Average number of storms with knots >=64
+summary(num_peryear64[[2]])
+sd(num_peryear64[[2]])
+
+
+#Average number of storms with knots >=96
+summary(num_peryear96[[2]])
+sd(num_peryear96[[2]])
+
+
+
+##Regression Analysis I: Mean
+mean_pressure <- aggregate(tracks$press,list(tracks$id),mean)
+mean_wind <- aggregate(tracks$wind,list(tracks$id),mean)
+mean_pressure <- mean_pressure[mean_pressure[[2]]!=0,]
+mean_wind <- mean_wind[mean_wind[[1]]%in%mean_pressure[[1]],]
+lm_mean <- lm(mean_wind[[2]]~mean_pressure[[2]])
+
+library(ggplot2)
+lm_meandata <- as.data.frame(cbind(mean_pressure[[2]],mean_wind[[2]]))
+ggplot(data=lm_meandata,aes(x=V1,y=V2))+
+  geom_point()+
+  geom_abline(intercept=coef(lm_mean)[1],slope=coef(lm_mean)[2],size=1)+
+  xlab('mean pressure')+
+  ylab('mean wind speed')+
+  ggtitle('Regression of Mean Storm Pressure and Mean Storm Speed')
+
+
+##Regression Analysis II: Median
+median_pressure <- aggregate(tracks$press,list(tracks$id),median)
+median_wind <- aggregate(tracks$wind,list(tracks$id),median)
+median_pressure <- median_pressure[median_pressure[[2]]!=0,]
+median_wind <- median_wind[median_wind[[1]]%in%median_pressure[[1]],]
+lm_median <- lm(median_wind[[2]]~median_pressure[[2]])
+lm_mediandata <- as.data.frame(cbind(median_pressure[[2]],median_wind[[2]]))
+
+ggplot(data=lm_mediandata,aes(x=V1,y=V2))+
+  geom_point()+
+  geom_abline(intercept=coef(lm_median)[1],slope=coef(lm_median)[2],size=1)+
+  xlab('median pressure')+
+  ylab('median wind speed')+
+  ggtitle('Regression of Median Storm Pressure and Median Storm Speed')
+
+```

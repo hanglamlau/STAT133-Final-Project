@@ -1,0 +1,17 @@
+{
+    "contents" : "##############set up the folders and files################\n\ndir.create('rawdata')\ndir.create('data')\ndir.create('images')\ndir.create('code')\ndir.create('resources')\ndir.create('report')\n\n\nfile.create('./code/data_cleaning.R')\nfile.create('./code/data_analysis.R')\nfile.create('./report/report.Rmd')\nfile.create('README.md')\n\n################download the data########################\n\nsetwd('./rawdata')\nsetInternet2(use=FALSE)\nurl <- 'ftp://eclipse.ncdc.noaa.gov/pub/ibtracs/v03r06/wmo/hurdat_format/basin/Basin.NA.ibtracs_hurdat.v03r06.hdat'\ndownload.file(url,'rawdata')\n\nurl2 <- 'ftp://eclipse.ncdc.noaa.gov/pub/ibtracs/v03r06/wmo/csv/basin/Basin.EP.ibtracs_wmo.v03r06.csv'\ndownload.file(url2,'EPrawdata.csv')\n\nurl3 <- 'ftp://eclipse.ncdc.noaa.gov/pub/ibtracs/v03r06/wmo/csv/basin/Basin.NA.ibtracs_wmo.v03r06.csv'\ndownload.file(url3,'NArawdata.csv')\n\nsetwd('../')\n\n",
+    "created" : 1438923160511.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3497964457",
+    "id" : "FFA71DBB",
+    "lastKnownWriteTime" : 1438923675,
+    "path" : "C:/Users/Tian Xia/Dropbox/Stat133_FinalProject/Stat133_FinalProject/skeleton.R",
+    "project_path" : "skeleton.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

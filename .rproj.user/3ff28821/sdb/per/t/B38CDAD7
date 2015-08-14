@@ -1,0 +1,16 @@
+{
+    "contents" : "#############plot EP and NA data######################\nsetwd('./rawdata')\nEPdata <- read.csv('EPrawdata.csv',skip=1)\nNAdata <- read.csv('NArawdata.csv',skip=1)\n\nhead(EPdata)\nhead(NAdata)\n \nEPdata <- EPdata[-1,]\nNAdata <- NAdata[-1,]\n\nlibrary(maps)\nlibrary(ggplot2)\n\nmap()\n\nggplot(aes(data=NAdata,x=Longitude,y=Latitude))+\n  geom_line()\n",
+    "created" : 1438923359887.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1778644954",
+    "id" : "B38CDAD7",
+    "lastKnownWriteTime" : 1438926745,
+    "path" : "C:/Users/Tian Xia/Dropbox/Stat133_FinalProject/Stat133_FinalProject/code/data_analysis.R",
+    "project_path" : "code/data_analysis.R",
+    "properties" : {
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

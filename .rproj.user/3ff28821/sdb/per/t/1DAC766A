@@ -1,0 +1,16 @@
+{
+    "contents" : "############load the rawdata#############\nsetwd('./rawdata')\nrawdata <- read.csv('rawdata',header = FALSE, stringsAsFactors=FALSE)\n\n################get the header information##########\n\ndim(rawdata)\nclass(rawdata)\ntable(apply(rawdata,1,nchar))######so there should be 1777 entries of header\n\nheader <- rawdata[grepl('M',rawdata[,1]),]\nhead(header)\n\n################clean the header data frame###########\nclass(header)\nheader_id <- 1:1777\nheader_date <- as.Date(substr(header,7,17),'%m/%d/%Y')\n\nheader_days <- as.numeric(substr(header,20,22))\nhist(header_days)\n\nheader_names <- gsub(' ','',substr(header,35,47))\n\nstorms <- data.frame(id=header_id,date=header_date,days=header_days,name=header_names,row.names = NULL)\nstorms$date <- format(storms$date,'%m/%d/%Y')\n\nhead(storms)\ntail(storms)\n\n#################export the storms file##########\ngetwd()\nwrite.csv(storms,'../data/storms.csv')\n\n\n################retrieve the tracks information########\nhead(rawdata,12)\n\ntracks <- rawdata[grepl('[\\\\*]',rawdata[,1]),]\n\nhead(tracks,15)\n\n\n\n\n\n\n\n\n\n",
+    "created" : 1438918285080.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3250941390",
+    "id" : "1DAC766A",
+    "lastKnownWriteTime" : 1438922519,
+    "path" : "C:/Users/Tian Xia/Dropbox/Stat133_FinalProject/Stat133_FinalProject/code/data_cleaning.R",
+    "project_path" : "code/data_cleaning.R",
+    "properties" : {
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}
